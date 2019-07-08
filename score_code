@@ -132,3 +132,22 @@ def my_cricket_score():
 
 
 mname, tscore = my_cricket_score()
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ GENERATE NOTIFICATIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+import time
+
+from win10toast import ToastNotifier
+
+import cricket_June26_v2_advanced
+
+while True:
+    # start_time = time.time()
+    time.sleep(1)
+    mat_name, score_info = cricket_June26_v2_advanced.my_cricket_score()
+
+    toaster = ToastNotifier()
+    toaster.show_toast(mat_name, score_info,
+                       icon_path="C:/Users/nisan/PycharmProjects/Project_Cricket_Py/iconfinder_cricket_993999.ico",
+                       duration=300,
+                       threaded=False)
