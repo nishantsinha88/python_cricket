@@ -1,0 +1,134 @@
+def my_cricket_score():
+    from pycricbuzz import Cricbuzz
+    from pycountry_convert import country_name_to_country_alpha3
+
+    c = Cricbuzz()
+    matches = c.matches()
+
+    # print(matches)
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ MATCH INFO & VARIABLES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    for match in matches:
+        if match['id'] == '20282':  # Enter Match ID from Cricbuzz
+            # print(match)
+
+            team1 = match['team1'].get('name')
+            team2 = match['team2'].get('name')
+            matchname = match['mnum'] + ": " + team1 + " v " + team2
+            mat_toss = match['toss']
+            mat_status = match['status']
+            scores = c.livescore(match['id'])
+            # print(match)
+            # print(c.scorecard('20271'))
+            team_name_long = ['Bangladesh', 'England', 'Sri Lanka', 'South Africa',
+                              'West Indies']  # For countries having alpha3 codes different from what is used in cricket
+            team_name_short = ['BAN', 'ENG', 'SL', 'SA', 'WI']
+
+            if match['mchstate'] == 'preview':
+                score_info = mat_status + "\nVenue: " + match['venue_name'] + ", " + match['venue_location']
+
+            if match['mchstate'] == 'toss':
+                score_info = "Toss: " + mat_toss + "\nVenue: " + match['venue_name'] + ", " + match['venue_location']
+
+                if mat_toss[:mat_toss.index("elect") - 1] in team_name_long:
+                    toss_country = team_name_short[team_name_long.index(mat_toss[:mat_toss.index("elect") - 1])]
+                else:
+                    toss_country = country_name_to_country_alpha3(mat_toss[:mat_toss.index("elect") - 1])
+
+            if match['mchstate'] == 'inprogress' or match['mchstate'] == 'innings break' \
+                    or match['mchstate'] == 'complete' or match['mchstate'] == 'mom':
+
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~ COUNTRY NAMING CONVENTION (BYPASS WEST INDIES' ERROR) ~~~~~~~~~~~~~~~~~~~~
+
+                if (scores.get('batting').get('team')) in team_name_long:
+                    batting_country = team_name_short[team_name_long.index(scores.get('batting').get('team'))]
+                else:
+                    batting_country = country_name_to_country_alpha3(scores.get('batting').get('team'))
+
+                if (scores.get('bowling').get('team')) in team_name_long:
+                    bowling_country = team_name_short[team_name_long.index(scores.get('bowling').get('team'))]
+                else:
+                    bowling_country = country_name_to_country_alpha3(scores.get('bowling').get('team'))
+
+                if mat_toss[:mat_toss.index("elect") - 1] in team_name_long:
+                    toss_country = team_name_short[team_name_long.index(mat_toss[:mat_toss.index("elect") - 1])]
+                else:
+                    toss_country = country_name_to_country_alpha3(mat_toss[:mat_toss.index("elect") - 1])
+
+                # ~~~~~~~~~~~~~~~~~~~~~~~CURRENT TEAM AND INDIVIDUAL SCORES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+                current_batting = batting_country + " (" + scores.get('batting').get('score')[0]['runs'] \
+                                  + "-" + scores.get('batting').get('score')[0]['wickets'] + ", " + \
+                                  scores.get('batting').get('score')[0][
+                                      'overs'] + ")"
+
+                batsman1 = (scores.get('batting').get('batsman')[0]['name'] + "*: " +
+                            scores.get('batting').get('batsman')[0][
+                                'runs'] + " (" + scores.get('batting').get('batsman')[0]['balls'] + ")")
+
+                if (len(scores.get('batting').get('batsman'))) == 2:
+                    batsman2 = (scores.get('batting').get('batsman')[1]['name'] + ": " +
+                                scores.get('batting').get('batsman')[1]['runs']
+                                + " (" + scores.get('batting').get('batsman')[1]['balls'] + ")")
+                else:
+                    batsman2 = "FALL OF WICKET"
+
+                bowler = (scores.get('bowling').get('bowler')[0]['name'] + ": " +
+                          scores.get('bowling').get('bowler')[0][
+                              'wickets'] + "-" + scores.get('bowling').get('bowler')[0]['runs'] + " (" +
+                          scores.get('bowling').get('bowler')[0]['overs'] + ")")
+
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~INNINGS CHECK~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+                if scores.get('batting').get('score')[0]['inning_num'] == '2':
+
+                    matchname = current_batting + " v " + bowling_country + " (" + \
+                                scores.get('bowling').get('score')[0]['runs'] \
+                                + "-" + scores.get('bowling').get('score')[0]['wickets'] + ")"
+
+                    rem_runs = (float(scores.get('bowling').get('score')[0]['runs']) + 1) - (
+                        float(scores.get('batting').get('score')[0]['runs']))
+                    rem_over = 50 - float(scores.get('batting').get('score')[0]['overs'])
+
+                    if rem_runs <= 0.0 or rem_over == 0.0 or scores.get('batting').get('score')[0]['wickets'] == '10':
+                        reqd_rr = "--"
+                    else:
+                        reqd_rr = str(round(rem_runs / rem_over, 1))
+
+                    if float(scores.get('batting').get('score')[0]['overs']) == 0.0:
+                        curr_rr = str(0.0)
+                    else:
+                        curr_rr = str(round(float(scores.get('batting').get('score')[0]['runs']) /
+                                            float(scores.get('batting').get('score')[0]['overs']), 1))
+
+                    score_info = mat_status + ("\nCRR: " + curr_rr + "  vs RRR: " + reqd_rr) + (
+                            "\n" + batsman1 + "   " + batsman2) + ("\n" + bowler)
+
+                else:
+
+                    matchname = current_batting + " v " + bowling_country + " (Toss: " + toss_country + ")"
+
+                    if float(scores.get('batting').get('score')[0]['overs']) == 0.0:
+                        curr_rr = str(0.0)
+                    else:
+                        curr_rr = str(round(float(scores.get('batting').get('score')[0]['runs']) /
+                                            float(scores.get('batting').get('score')[0]['overs']), 1))
+
+                    if match['mchstate'] == 'innings break':
+                        projected_score = "Innings Over"
+                    else:
+                        projected_score = str(int(float(scores.get('batting').get('score')[0]['runs']) * 50
+                                                  / float(scores.get('batting').get('score')[0]['overs'])))
+
+                    score_info = "\nCRR: " + curr_rr + "     Projected: " + projected_score + (
+                            "\n" + batsman1 + "   " + batsman2) + ("\n" + bowler)
+
+            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~FINAL PRINT OUT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+            livescore = "\n" + matchname + "\n" + score_info + "\n"
+            print(livescore)
+            return matchname, score_info
+
+
+mname, tscore = my_cricket_score()
