@@ -1,0 +1,40 @@
+import requests
+from bs4 import BeautifulSoup
+import time
+from win10toast import ToastNotifier
+
+page = requests.get("http://www.espncricinfo.com/icc-champions-trophy-2013/engine/match/1152846.html")
+page_html = page.text
+soup = BeautifulSoup(page_html, 'html.parser')
+
+mat_details = soup.find('div', class_='cscore_info-overview').text
+mat_substr = mat_details[:mat_details.rfind(" at ")]
+print("\n" + mat_details)
+# print("\n" + mat_substr)
+
+team1_name = soup.find('li', class_='cscore_item cscore_item--home').find_next('div', class_='cscore_team icon-font-after').find_next('div', class_='cscore_truncate').find_next('a').span.text
+# print(team1_name.span.text)
+
+team1_score = soup.find('li', class_='cscore_item cscore_item--home').find_next('div', class_='cscore_team icon-font-after').find_next('div', class_='cscore_score').text
+print("\n" + team1_name + " " + team1_score)
+
+team2_name = soup.find('li', class_='cscore_item cscore_item--away').find_next('div', class_='cscore_team icon-font-after').find_next('div', class_='cscore_truncate').find_next('a').span.text
+# print(team2_name.span.text)
+
+team2_score = soup.find('li', class_='cscore_item cscore_item--away').find_next('div', class_='cscore_team icon-font-after').find_next('div', class_='cscore_score').text
+print(team2_name + " " + team2_score)
+
+mat_status = soup.find('div', class_='cscore_notes').span.text
+print("\n" + mat_status)
+
+
+while True:
+    # start_time = time.time()
+    time.sleep(1)
+    # mat_name, score_info = cricket_scores_July_v2.my_cricket_score()
+
+    toaster = ToastNotifier()
+    toaster.show_toast(mat_substr, team1_name + " " + team1_score + "\n" + team2_name + " " + team2_score + "\n" + mat_status,
+                       icon_path="C:/Users/nisan/PycharmProjects/Lesson2_Scraping/ICC_icon.ico",
+                       duration=240,
+                       threaded=False)
